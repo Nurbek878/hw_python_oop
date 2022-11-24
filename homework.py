@@ -1,25 +1,26 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-
-    def __init__(self,
-                 training_type: int,
-                 duration: float,
-                 distance: float,
-                 speed: float,
-                 calories: float
-                 ) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: int
+    duration: float
+    distance: float
+    speed: float
+    calories: float
+    MESSAGE: str = ('Тип тренировки: {training_type}; '
+                    'Длительность: {duration:.3f} ч.; '
+                    'Дистанция: {distance:.3f} км; '
+                    'Ср. скорость: {speed:.3f} км/ч; '
+                    'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f} км/ч; '
-                f'Потрачено ккал: {self.calories:.3f}.')
+        return self.MESSAGE.format(training_type=self.training_type,
+                                   duration=self.duration,
+                                   distance=self.distance,
+                                   speed=self.speed,
+                                   calories=self.calories)
 
 
 class Training:
@@ -62,7 +63,6 @@ class Running(Training):
     """Тренировка: бег."""
     CALORIES_MEAN_SPEED_MULTIPLIER: int = 18
     CALORIES_MEAN_SPEED_SHIFT: float = 1.79
-    M_IN_KM: int = 1000
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
@@ -130,7 +130,16 @@ class Swimming(Training):
 def read_package(workout_type: str, input_data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
     package = {'SWM': Swimming, 'RUN': Running, 'WLK': SportsWalking}
-    return package[workout_type](*input_data)
+    try:
+        package[workout_type](*input_data)
+    except KeyError:
+        print('Некорректное название тренировки')
+        return None
+    except TypeError:
+        print('Некорректное число данных тренировки')
+        return None
+    else:
+        return package[workout_type](*input_data)
 
 
 def main(training: Training) -> None:
@@ -148,4 +157,7 @@ if __name__ == '__main__':
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
-        main(training)
+        if training:
+            main(training)
+        else:
+            None
